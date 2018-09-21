@@ -1,2 +1,2 @@
 # BinaryMinusTree
-B-树的初略实现
+B-树的粗略实现
