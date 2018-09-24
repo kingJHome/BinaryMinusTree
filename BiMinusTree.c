@@ -1,3 +1,5 @@
+#include <math.h>
+#include <stdlib.h>
 #include "BiMinusTree.h"
 
 /***********************辅助函数**************************/
@@ -30,6 +32,31 @@ void insert(BSTree t,int pos,int k){
 	t->key[pos] = k;
 	t->ptr[pos] = t->ptr[pos-1];
 	++t->keynum;
+}
+
+void allocSize(BTree t,int size){
+	t->keynum = 0;
+	t->parent = NULL;
+	t->key = (int*)malloc(size * sizeof(int));
+	t->ptr = (BTree)malloc(sizeof(BTNode));
+}
+
+void setKeyAPtr(BTree target,BTree source,int start,int stop){
+	for(int i = start; i <= stop; ++i){
+		target->key[i] = source->key[i];
+		target->keynum++;
+	}
+
+	for(int i = start-1; i <= stop; ++i){
+		target->ptr[i] = source->ptr[i];
+	}
+}
+
+void setLRAparent(BTree pa,BTree lc,BTree rc){
+	pa->parent = NULL;
+	lc->parent = rc->parent = pa;
+	pa->lchild = lc;
+	pa->rchild = rc;
 }
 /*************************end*****************************/
 void setBTreeLayer(int num){
@@ -65,6 +92,31 @@ Result SearchBTree(BTree T,int k,int *mode){
 
 void InsertBTree(BTree *T,int k,BTree q,int pos){
 	if( q ){//插入结点非空
+		if( *T ){
+			int npos = search(*T,k);
+			insert(*T,npos+1,k);
+		}else{
+			*T = (BTree)malloc(sizeof(BTNode));
+			assert( *T );
+			allocSize(*T, layer+1);
+			assert( (*T)->key && (*T)->ptr );
+			setKeyAPtr(*T,q,pos,pos);
+		}
+		BTree left = (BTree)malloc(BTNode),
+			  right = (BTree)malloc(BTNode);
+
+		assert(left && right);
+		allocSize(left, layer+1);
+		allocSize(right, layer+1);
+		assert(left->key && left->ptr && right->key && right->ptr);
+		setKeyAPtr(left,q,1,pos-1);
+		setKeyAPtr(right,q,pos+1,layer);
+		setLRAparent(*T,left,right);
+		free(q);
+		if( (*T)->keynum == layer ){
+			int lpos = ceil(layer / 2.0);
+			InsertBTree(&((*T)->parent),k,*T,lpos);
+		}
 	}else{
 		if( !(*T) ){//插入为空
 			*T = (BTree)malloc(sizeof(BTNode));
@@ -84,10 +136,14 @@ void InsertBTree(BTree *T,int k,BTree q,int pos){
 			if( i>0 && (*T)->key[i]==k ){
 				return;
 			}else{
-				if( !((*T)->ptr[i]) ){//插入本结点
-
+				if( !((*T)->ptr[i]) ){//插入到本结点
+					insert(*T,i+1,k);
+					if( (*T)->keynum == layer ){
+						int npos = ceil(layer / 2.0);
+						InsertBTree(&((*T)->parent),k,*T,npos);
+					}
 				}else{
-					InsertBTree();
+					InsertBTree(&((&T)->ptr[i]),k,NULL,0);
 				}
 			}
 		}
