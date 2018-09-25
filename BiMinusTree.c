@@ -1,152 +1,146 @@
-#include <math.h>
 #include <stdlib.h>
 #include "BiMinusTree.h"
 
-/***********************辅助函数**************************/
-int search(BSTree t,int k){
-	int pos = 0;
-	
-	if( t ){
-		for(int i = 1; i <= t->keynum; ++i){
-			if( t->key[i] == k ){
-				pos = i;
-				break;
-			}else if( t->key[i] < k ){
-				if( i+1>t->keynum || t->key[i+1]>k ){
-					pos = i;
-					break;
-				}
+int MyCeil(int a,int b){
+	int result;
+
+	if( a%b == 0 ){
+		result = a / b;		
+	}else{
+		result = a / b + 1;
+	}
+
+	return result;
+}
+
+void SplitNode(BTree prev,BTree *next,int diman){
+	int splitPos = MyCeil(diman,2);
+	BTree temp = (BTree)malloc(sizeof(BTNode));
+
+	if( temp ){
+		temp->grade = diman;
+		temp->key = (int*)malloc((diman+1) * sizeof(int));
+		temp->ptr = (BTNode**)malloc(sizeof(BTNode*) * (diman+1));
+
+		if( temp->key && temp->ptr ){
+			temp->keynum = 0;
+			for(int i = splitPos+1,cur = 1; i <= prev->keynum; ++i,++cur){
+				temp->key[cur] = prev->key[i];
+				temp->ptr[cur] = prev->ptr[i];
+				++temp->keynum;
 			}
+			temp->ptr[0] = prev->ptr[splitPos];
+			prev->keynum = splitPos - 1;
+			*next = temp;
+		}
+	}
+}
+
+void NewRoot(BTree *T,BTree lc,int k,BTree rc,int diman){
+	int midPos = MyCeil(diman,2);
+	BTree temp = (BTree)malloc(sizeof(BTNode));
+
+	if( temp ){
+		temp->grade = diman;
+		temp->key = (int*)malloc((diman+1) * sizeof(int));
+        temp->ptr = (BTNode**)malloc(sizeof(BTNode*) * (diman+1));
+ 
+        if( temp->key && temp->ptr ){
+			temp->parent = NULL;
+			temp->keynum = 1;
+		}
+
+		if( *T ){//分裂结点产生新根结点
+			temp->ptr[0] = *T;
+			temp->ptr[1] = rc;
+			(*T)->parent = temp;
+			rc->parent = temp;
+			temp->key[1] = (*T)->key[midPos];
+			*T = temp;
+		}else{
+			temp->key[1] = k;
+			*T = temp;
+		}
+	}
+}
+
+int Search(BTree t,int k){
+	int result = 0;
+
+	for(int i = t->keynum; i >= 1; --i){
+		if( k >= t->key[i] ){
+			result = i;
+			break;
 		}
 	}
 
-	return pos;
+	return result;
 }
 
-void insert(BSTree t,int pos,int k){
-	for(int inst = t->fieldNum; inst > pos; --inst){
-		t->key[inst] = t->key[inst-1];
-		t->ptr[inst] = t->ptr[inst-1];
-	}
-	//插入结点
-	t->key[pos] = k;
-	t->ptr[pos] = t->ptr[pos-1];
-	++t->keynum;
+void DestroyBTNode(BTree t){
+	free(t->key);
+	free(t->ptr);
+	free(t);
 }
 
-void allocSize(BTree t,int size){
-	t->keynum = 0;
-	t->parent = NULL;
-	t->key = (int*)malloc(size * sizeof(int));
-	t->ptr = (BTree)malloc(sizeof(BTNode));
-}
-
-void setKeyAPtr(BTree target,BTree source,int start,int stop){
-	for(int i = start; i <= stop; ++i){
-		target->key[i] = source->key[i];
-		target->keynum++;
-	}
-
-	for(int i = start-1; i <= stop; ++i){
-		target->ptr[i] = source->ptr[i];
-	}
-}
-
-void setLRAparent(BTree pa,BTree lc,BTree rc){
-	pa->parent = NULL;
-	lc->parent = rc->parent = pa;
-	pa->lchild = lc;
-	pa->rchild = rc;
-}
-/*************************end*****************************/
-void setBTreeLayer(int num){
-	layer = num;
-}
-
-Result SearchBTree(BTree T,int k,int *mode){
+Result SearchBTree(BTree T,int k){
 	Result rt = {NULL,0,0};
 	BTree p = T,
 		  q = NULL;
-	int found = 0;
+	int found = 0,i = 0;
 
 	while( p && !found ){
-		int i = search(p,k);
-
+		i = Search(p,k);
+		
+		rt.pt = p;
+		rt.i = i;
 		if( i>0 && p->key[i]==k ){
-			rt.pt = p;
-			rt.i = i;
-			rt.tag = 1;i
+			rt.tag = 1;
 			found = 1;
 			break;
 		}else{
-			if( !mode ){
-				p = p->ptr[i];
-			}else if( *mode == 1){
-				break;
-			}
+			rt.tag = 0;
+			p = p->ptr[i];
 		}
 	}
 
 	return rt;
 }
 
-void InsertBTree(BTree *T,int k,BTree q,int pos){
-	if( q ){//插入结点非空
-		if( *T ){
-			int npos = search(*T,k);
-			insert(*T,npos+1,k);
-		}else{
-			*T = (BTree)malloc(sizeof(BTNode));
-			assert( *T );
-			allocSize(*T, layer+1);
-			assert( (*T)->key && (*T)->ptr );
-			setKeyAPtr(*T,q,pos,pos);
-		}
-		BTree left = (BTree)malloc(BTNode),
-			  right = (BTree)malloc(BTNode);
+void Insert(BTree q,int pos,int k,BTree ap){
+	for(int i = q->grade; i > pos+1; --i){
+		q->key[i] = q->key[i-1];
+		q->ptr[i] = q->ptr[i-1];
+	}
+	q->key[pos+1] = k;
+	q->ptr[pos+1] = ap;
+	++q->keynum;
+}
 
-		assert(left && right);
-		allocSize(left, layer+1);
-		allocSize(right, layer+1);
-		assert(left->key && left->ptr && right->key && right->ptr);
-		setKeyAPtr(left,q,1,pos-1);
-		setKeyAPtr(right,q,pos+1,layer);
-		setLRAparent(*T,left,right);
-		free(q);
-		if( (*T)->keynum == layer ){
-			int lpos = ceil(layer / 2.0);
-			InsertBTree(&((*T)->parent),k,*T,lpos);
-		}
-	}else{
-		if( !(*T) ){//插入为空
-			*T = (BTree)malloc(sizeof(BTNode));
-			if( *T ){
-				(*T)->key = (int*)malloc((layer+1) * sizeof(int));
-				(*T)->ptr = (BTree)malloc(layer+1);
-				if((*T)->key && (*T)->ptr){
-					(*T)->parent = NULL;
-					(*T)->keynum = 1;
-					(*T)->key[1] = k;
-					memset((*T)->ptr,NULL,layer+1);
-				}
-			}
-		}else{
-			int i = search(*T,k);
+void InsertBTree(BTree *T,int k,BTree q,int pos,int diman){
+	BTree ap = NULL;
+	int x = k,
+		finished = 0;
 
-			if( i>0 && (*T)->key[i]==k ){
-				return;
-			}else{
-				if( !((*T)->ptr[i]) ){//插入到本结点
-					insert(*T,i+1,k);
-					if( (*T)->keynum == layer ){
-						int npos = ceil(layer / 2.0);
-						InsertBTree(&((*T)->parent),k,*T,npos);
-					}
-				}else{
-					InsertBTree(&((&T)->ptr[i]),k,NULL,0);
-				}
+	while( q && !finished ){
+		Insert(q, pos, x, ap);//向q插入数据,q->key[i+1]=x,q->ptr[i+1]=ap
+
+		if( q->keynum < diman ){
+			finished = 1;
+		}else{
+			int s = MyCeil(diman,2);
+
+			SplitNode(q, &ap, diman);
+			x = q->key[s];
+			q = q->parent;
+			if( q ){
+				pos = Search(q,k);
 			}
 		}
+	}
+
+	if( !finished ){//当q为空或q已经分裂，则建立新根节点
+		NewRoot(T, q, k, ap, diman);
 	}
 }
 
