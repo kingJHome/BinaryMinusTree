@@ -58,7 +58,7 @@ void readContent(char *content,int rows,void *others){
 		txtText->elem = (int*)malloc(txtText->length * sizeof(int));
 		if( txtText->elem ){
 			delim = strtok(split," ");
-			if(delim){
+			if(delim && strlen(delim)>0 ){
 				txtText->elem[cur++] = atoi(delim);
 				while( delim = strtok(NULL," ") ){
 					txtText->elem[cur++] = atoi(delim);

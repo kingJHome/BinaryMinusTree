@@ -114,6 +114,9 @@ void Insert(BTree q,int pos,int k,BTree ap){
 	}
 	q->key[pos+1] = k;
 	q->ptr[pos+1] = ap;
+	if( ap ){
+		ap->parent = q;
+	}
 	++q->keynum;
 }
 
