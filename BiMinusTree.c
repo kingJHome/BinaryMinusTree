@@ -27,9 +27,15 @@ void SplitNode(BTree prev,BTree *next,int diman){
 			for(int i = splitPos+1,cur = 1; i <= prev->keynum; ++i,++cur){
 				temp->key[cur] = prev->key[i];
 				temp->ptr[cur] = prev->ptr[i];
+				if( prev->ptr[i] ){
+					prev->ptr[i]->parent = temp;
+				}
 				++temp->keynum;
 			}
 			temp->ptr[0] = prev->ptr[splitPos];
+			if( prev->ptr[splitPos] ){
+				prev->ptr[splitPos]->parent = temp;
+			}
 			prev->keynum = splitPos - 1;
 			*next = temp;
 		}
