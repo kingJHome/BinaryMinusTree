@@ -153,5 +153,11 @@ void InsertBTree(BTree *T,int k,BTree q,int pos,int diman){
 	}
 }
 
-void DeleteBTree(BTree *T,int k){
+void MergeNode(BTree p,BTree a){
+}
+
+void Delete(BTree q,int pos){
+}
+
+void DeleteBTree(BTree *T,int k,BTree q,int pos){
 }

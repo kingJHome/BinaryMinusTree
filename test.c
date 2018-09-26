@@ -6,6 +6,7 @@
 
 typedef struct TreeContent{
 	int grade;
+	int delete;
 	int length;
 	int *elem;
 }TreeContent;
@@ -26,6 +27,12 @@ int main(int argc,char *argv[]){
 			}
 		}
 		visitBMTree(header);
+		Result rt = SearchBTree(header,txtText->delete);
+		if( rt.tag ){
+			printf("\n当删除一个关键字后，树序列：");
+			DeleteBTree(header,txtText->delete,rt.pt,rt.i);
+			visitBMTree(header);
+		}
 		printf("\n");
 	}
 	
@@ -37,10 +44,10 @@ void readContent(char *content,int rows,void *others){
 		 *attr = strndup(content,(size_t)(split-content));
 	TreeContent	*txtText = (TreeContent*)others;
 	
-	if( strcmp(attr,"grade") == 0 ){
+	if( strcmp(attr,"grade") == 0 ){//B-树的阶数
 		int grade = atoi(split+1);
 		txtText->grade = grade;
-	}else if( strcmp(attr,"data") == 0 ){
+	}else if( strcmp(attr,"data") == 0 ){//树的每个结点数据
 		char *delim = NULL;
 		size_t slen = 0;
 		int cur = 0;
@@ -65,6 +72,9 @@ void readContent(char *content,int rows,void *others){
 				}
 			}	
 		}
+	}else if( strcmp(attr,"delete") ){//要删除的关键字结点
+		int delKey = atoi(split+1);
+		txtText->delete = delKey;
 	}
 }
 

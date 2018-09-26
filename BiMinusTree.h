@@ -36,7 +36,13 @@ void Insert(BTree q,int pos,int k,BTree ap);
 //插入结点
 void InsertBTree(BTree *T,int k,BTree q,int pos,int diman);
 
+//合并结点
+void MergeNode(BTree p,BTree a);
+
+//删除数据
+void Delete(BTree q,int pos);
+
 //删除结点
-void DeleteBTree(BTree *T,int k);
+void DeleteBTree(BTree *T,int k,BTree q,int pos);
 
 #endif
